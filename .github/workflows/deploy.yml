@@ -10,32 +10,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout the code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup Node.js (React build environment)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # 3️⃣ Install dependencies
       - name: Install dependencies
-        working-directory: react-app   #  change this to your folder name
         run: npm install
 
+      # 4️⃣ Build the React app
       - name: Build React app
-        working-directory: react-app   #  same folder
         run: npm run build
 
-      - name: Copy files to VM
+      # 5️⃣ Deploy build files to VM
+      - name: Copy files to Oracle Linux VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "react-app/build/*"
+          source: "build/*"
           target: "/var/www/html/react-app"
 
-      - name: Restart Nginx
+      # 6️⃣ Restart Nginx to serve new content
+      - name: Restart Nginx on VM
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.HOST }}
