@@ -1,4 +1,4 @@
-name: React CI/CD to Oracle Linux VM
+name: build-and-deploy
 
 on:
   push:
@@ -16,31 +16,31 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
 
       - name: Install dependencies
+        working-directory: react-app   #  change this to your folder name
         run: npm install
 
       - name: Build React app
+        working-directory: react-app   #  same folder
         run: npm run build
 
-      - name: Copy build folder to VM
+      - name: Copy files to VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "build/*"
-          target: "/var/www/react-app/build"
+          source: "react-app/build/*"
+          target: "/var/www/html/react-app"
 
-      - name: Restart React app on VM
+      - name: Restart Nginx
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /var/www/react-app
-            pkill -f "serve" || true
-            nohup serve -s build -l 3000 >/dev/null 2>&1 &
+            sudo systemctl restart nginx
 
