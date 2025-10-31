@@ -3,18 +3,18 @@ name: Deploy React App to Oracle Linux VM
 on:
   push:
     branches:
-      - main  # or your deployment branch
+      - main  # Triggers deployment when you push to main branch
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository
+      # Step 1: Checkout the code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js
+      # Step 2: Setup Node.js (React build environment)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -25,27 +25,27 @@ jobs:
         working-directory: ./react-app
         run: npm install
 
-      # Step 4: Build the project
+      # Step 4: Build the React project
       - name: Build project
         working-directory: ./react-app
         run: npm run build
 
-      # Step 5: Deploy build folder to your VM
+      # Step 5: Deploy build folder to Oracle Linux VM
       - name: Deploy build to Oracle Linux VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
+          username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "react-app/build/*"
           target: "/var/www/html/react-app"
 
-      # Step 6: Restart Nginx
+      # Step 6: Restart Nginx to serve new content
       - name: Restart Nginx on VM
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
+          username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             sudo systemctl restart nginx
