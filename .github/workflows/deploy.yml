@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted   # 👈 Runs directly on your VM (self-hosted runner)
 
     steps:
       # Step 1: Checkout repository
@@ -30,27 +30,15 @@ jobs:
         working-directory: ./react-app
         run: npm run build
 
-      # Step 5: Deploy build folder to VM
-      - name: Deploy build to Oracle Linux VM
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: 10.1.14.230
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "react-app/build/*"
-          target: "/var/www/html/react-app"
-          port: 22
-          overwrite: true
-          timeout: 60s
+      # Step 5: Deploy build folder locally
+      - name: Deploy build to web directory
+        run: |
+          mkdir -p /var/www/html/react-app
+          cp -r ./react-app/build/* /var/www/html/react-app/
 
       # Step 6: Restart web service (httpd or nginx)
       - name: Restart web service
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ipaansible1.infra.alephys.com
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            systemctl restart httpd || systemctl restart nginx
-            systemctl status httpd --no-pager || systemctl status nginx --no-pager
+        run: |
+          systemctl restart httpd || systemctl restart nginx
+          systemctl status httpd --no-pager || systemctl status nginx --no-pager
 
