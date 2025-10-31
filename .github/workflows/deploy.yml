@@ -1,4 +1,4 @@
-name: build-and-deploy
+name: Build and Deploy React App
 
 on:
   push:
@@ -10,34 +10,58 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+<<<<<<< HEAD
       # 1️ Checkout the code
       - name: Checkout code
         uses: actions/checkout@v4
 
       # 2️ Setup Node.js (React build environment)
+=======
+      # Step 1: Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Node.js
+>>>>>>> 75a4c52 (Fix CI/CD working directory for React app)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '18'
 
+<<<<<<< HEAD
       # 3️ Install dependencies
+=======
+      # Step 3: Install dependencies
+>>>>>>> 75a4c52 (Fix CI/CD working directory for React app)
       - name: Install dependencies
+        working-directory: ./react-app
         run: npm install
 
+<<<<<<< HEAD
       # 4️ Build the React app
       - name: Build React app
         run: npm run build
 
       # 5️ Deploy build files to VM
       - name: Copy files to Oracle Linux VM
+=======
+      # Step 4: Build the project
+      - name: Build project
+        working-directory: ./react-app
+        run: npm run build
+
+      # Step 5: Deploy build folder to your VM
+      - name: Deploy build to Oracle Linux VM
+>>>>>>> 75a4c52 (Fix CI/CD working directory for React app)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "build/*"
+          source: "react-app/build/*"
           target: "/var/www/html/react-app"
 
+<<<<<<< HEAD
       # 6️ Restart Nginx to serve new content
       - name: Restart Nginx on VM
         uses: appleboy/ssh-action@v0.1.10
@@ -48,3 +72,5 @@ jobs:
           script: |
             sudo systemctl restart nginx
 
+=======
+>>>>>>> 75a4c52 (Fix CI/CD working directory for React app)
