@@ -1,4 +1,4 @@
-name: React App CI/CD Pipeline
+name: Deploy React App to Oracle Linux VM
 
 on:
   push:
@@ -6,49 +6,51 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code
+      # Step 1: Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js
-      - name: Set up Node.js
+      # Step 2: Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '18'
 
       # Step 3: Install dependencies
       - name: Install dependencies
+        working-directory: ./react-app
         run: npm install
 
-      # Step 4: Build the React app
-      - name: Build React app
+      # Step 4: Build project
+      - name: Build project
+        working-directory: ./react-app
         run: npm run build
 
-      # Step 5: Copy build files to remote server
-      - name: Deploy build to server
+      # Step 5: Deploy build folder to VM
+      - name: Deploy build to Oracle Linux VM
         uses: appleboy/scp-action@v0.1.7
-        with:
-          host: 10.1.14.230                    # You can also use ipaansible1.infra.alephys.com if DNS resolves
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}  # Add your private key in GitHub secrets
-          source: react-app/build/*
-          target: /var/www/html/react-app
-          port: 22
-          timeout: 30s
-          overwrite: true
-
-      # Step 6: (Optional) Restart web service after deployment
-      - name: Restart httpd service
-        uses: appleboy/ssh-action@v1.0.3
         with:
           host: 10.1.14.230
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "react-app/build/*"
+          target: "/var/www/html/react-app"
+          port: 22
+          overwrite: true
+          timeout: 60s
+
+      # Step 6: Restart web service (httpd or nginx)
+      - name: Restart web service
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ipaansible1.infra.alephys.com
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            systemctl restart httpd
-            systemctl status httpd --no-pager
+            systemctl restart httpd || systemctl restart nginx
+            systemctl status httpd --no-pager || systemctl status nginx --no-pager
 
