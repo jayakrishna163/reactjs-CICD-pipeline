@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted   # 👈 Runs directly on your VM (self-hosted runner)
+    runs-on: self-hosted   # Runs directly on your VM (self-hosted runner)
 
     steps:
       # Step 1: Checkout repository
@@ -33,12 +33,14 @@ jobs:
       # Step 5: Deploy build folder locally
       - name: Deploy build to web directory
         run: |
-          mkdir -p /var/www/html/react-app
-          cp -r ./react-app/build/* /var/www/html/react-app/
+          sudo mkdir -p /var/www/html/react-app
+          sudo cp -r ./react-app/build/* /var/www/html/react-app/
+          sudo chown -R nginx:nginx /var/www/html/react-app || true
+          echo " Deployment completed successfully."
 
       # Step 6: Restart web service (httpd or nginx)
       - name: Restart web service
         run: |
-          systemctl restart httpd || systemctl restart nginx
-          systemctl status httpd --no-pager || systemctl status nginx --no-pager
+          sudo systemctl restart httpd || sudo systemctl restart nginx
+          sudo systemctl status httpd --no-pager || sudo systemctl status nginx --no-pager
 
