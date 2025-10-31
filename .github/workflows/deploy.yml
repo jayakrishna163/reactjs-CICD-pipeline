@@ -1,12 +1,12 @@
-name: Deploy React App to Oracle Linux VM
+name: React App CI/CD Pipeline
 
 on:
   push:
     branches:
-      - main  # Triggers deployment when you push to main branch
+      - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -14,39 +14,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js (React build environment)
-      - name: Setup Node.js
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18
 
       # Step 3: Install dependencies
       - name: Install dependencies
-        working-directory: ./react-app
         run: npm install
 
-      # Step 4: Build the React project
-      - name: Build project
-        working-directory: ./react-app
+      # Step 4: Build the React app
+      - name: Build React app
         run: npm run build
 
-      # Step 5: Deploy build folder to Oracle Linux VM
-      - name: Deploy build to Oracle Linux VM
+      # Step 5: Copy build files to remote server
+      - name: Deploy build to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.HOST }}
+          host: 10.1.14.230                    # You can also use ipaansible1.infra.alephys.com if DNS resolves
           username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "react-app/build/*"
-          target: "/var/www/html/react-app"
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  # Add your private key in GitHub secrets
+          source: react-app/build/*
+          target: /var/www/html/react-app
+          port: 22
+          timeout: 30s
+          overwrite: true
 
-      # Step 6: Restart Nginx to serve new content
-      - name: Restart Nginx on VM
-        uses: appleboy/ssh-action@v0.1.10
+      # Step 6: (Optional) Restart web service after deployment
+      - name: Restart httpd service
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.HOST }}
+          host: 10.1.14.230
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            sudo systemctl restart nginx
+            systemctl restart httpd
+            systemctl status httpd --no-pager
 
