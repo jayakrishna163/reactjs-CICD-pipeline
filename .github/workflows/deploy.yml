@@ -1,40 +1,52 @@
-# Step 1: Checkout repository
-- name: Checkout code
-  uses: actions/checkout@v4
+name: Deploy React App to Oracle Linux VM
 
-# Step 2: Setup Node.js
-- name: Setup Node.js
-  uses: actions/setup-node@v4
-  with:
-    node-version: '18'
+on:
+  push:
+    branches:
+      - main  # or your deployment branch
 
-# Step 3: Install dependencies
-- name: Install dependencies
-  working-directory: ./react-app
-  run: npm install
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
 
-# Step 4: Build the project
-- name: Build project
-  working-directory: ./react-app
-  run: npm run build
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-# Step 5: Deploy build folder to your VM
-- name: Deploy build to Oracle Linux VM
-  uses: appleboy/scp-action@v0.1.7
-  with:
-    host: ${{ secrets.HOST }}
-    username: ${{ secrets.USERNAME }}
-    key: ${{ secrets.SSH_PRIVATE_KEY }}
-    source: "react-app/build/*"
-    target: "/var/www/html/react-app"
+      # Step 2: Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
-# Step 6: Restart Nginx
-- name: Restart Nginx on VM
-  uses: appleboy/ssh-action@v0.1.10
-  with:
-    host: ${{ secrets.HOST }}
-    username: ${{ secrets.USERNAME }}
-    key: ${{ secrets.SSH_PRIVATE_KEY }}
-    script: |
-      sudo systemctl restart nginx
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        working-directory: ./react-app
+        run: npm install
+
+      # Step 4: Build the project
+      - name: Build project
+        working-directory: ./react-app
+        run: npm run build
+
+      # Step 5: Deploy build folder to your VM
+      - name: Deploy build to Oracle Linux VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "react-app/build/*"
+          target: "/var/www/html/react-app"
+
+      # Step 6: Restart Nginx
+      - name: Restart Nginx on VM
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo systemctl restart nginx
 
