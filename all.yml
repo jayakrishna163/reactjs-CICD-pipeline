@@ -1,0 +1,132 @@
+# =========================
+# Database configuration
+# =========================
+database_engine: postgresql
+database_version: 13
+database_host: "{{ groups['cluster_master_nodes'] | first }}"
+
+# =========================
+# Python configuration
+# =========================
+install_py3_psycopg2: true
+ansible_python_interpreter: /usr/libexec/platform-python
+
+# =========================
+# Cloudera Manager configuration
+# =========================
+cloudera_manager_host: "{{ groups['cloudera_manager'] | first }}"
+cloudera_manager_version: "7.13.1"
+cloudera_manager_distro_name: "redhat"
+cloudera_manager_distro_version: "8"
+
+cloudera_archive_base_url: "https://archive.cloudera.com"
+cloudera_manager_repo_username: "e77768ed-1987-41fb-94c2-5cdf295599f5"
+cloudera_manager_repo_password: "2aed95ec605d"
+cloudera_manager_license_trial: false
+license_local_tmp_path: "/root/cdp_private_cloud_installation/cloudera_license.txt"
+
+selinux_state: disabled
+
+# =========================
+# Parcels configuration
+# =========================
+parcel_repos:
+  - "http://reposnode.infra.alephys.com/data/parcels/p/cdh7/7.3.1.0/parcels/"
+parcel_repo_username: "e77768ed-1987-41fb-94c2-5cdf295599f5"
+parcel_repo_password: "2aed95ec605d"
+
+# =========================
+# Cluster configuration
+# =========================
+cluster_name: "cdp-ansible"
+update_services: true
+
+clusters:
+  - name: "{{ cluster_name }}"
+    type: base
+    os_distribution: "el8"
+    repositories:
+      - "{{ parcel_repos[0] }}"
+    services:
+      - HDFS
+      - YARN
+      - ZOOKEEPER
+      - HBASE
+      - PHOENIX
+      - HIVE
+      - HUE
+      - QUEUEMANAGER
+      - HIVE_ON_TEZ
+      - TEZ
+      - INFRA_SOLR
+      - RANGER
+      - OOZIE
+    security:
+      kerberos: true
+    host_templates:
+      Master:
+        HDFS: [NAMENODE, SECONDARYNAMENODE, GATEWAY, DATANODE]
+        ZOOKEEPER: [SERVER]
+        YARN: [RESOURCEMANAGER, JOBHISTORY, NODEMANAGER]
+        HBASE: [MASTER, REGIONSERVER]
+        PHOENIX: [PHOENIX_QUERY_SERVER]
+        HIVE: [GATEWAY, HIVEMETASTORE]
+        HUE: [HUE_SERVER]
+        INFRA_SOLR: [SOLR_SERVER]
+        RANGER: [RANGER_ADMIN]
+        TEZ: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY, HIVESERVER2]
+        QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
+        OOZIE: [OOZIE_SERVER]
+      Worker:
+        HDFS: [DATANODE, GATEWAY]
+        ZOOKEEPER: [SERVER]
+        YARN: [NODEMANAGER]
+        HBASE: [REGIONSERVER]
+        PHOENIX: [PHOENIX_QUERY_SERVER]
+        HIVE: [GATEWAY]
+        TEZ: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY]
+        HUE: [HUE_LOAD_BALANCER]
+        RANGER: [RANGER_TAGSYNC, RANGER_USERSYNC]
+
+# =========================
+# Management Services
+# =========================
+mgmt:
+  services:
+    - HOSTMONITOR
+    - SERVICEMONITOR
+    - EVENTSERVER
+    - ALERTPUBLISHER
+
+# =========================
+# Kerberos / FreeIPA Configuration
+# =========================
+freeipa_enroll: true
+freeipa_autodns: true
+use_sssd_for_enumeration: true
+ipaclient_principal: admin
+ipaclient_password: Alph@1234
+ipaclient_servers:
+  - ldapnode.infra.alephys.com
+dns_search_domains:
+  - infra.alephys.com
+
+security:
+  enable_kerberos: true
+  enable_ldap: true
+
+
+krb5_kdc_type: 'Red Hat IPA'
+krb5_domain: infra.alephys.com
+krb5_kdc_host: ldapnode.infra.alephys.com
+krb5_realm: ALEPHYS.COM
+krb5_enc_types: "aes256-cts"
+krb5_kdc_admin_user: admin
+krb5_kdc_admin_password: "Alph@1234"
+ipaadmin_password: "Alph@1234"
+use_sssd_for_enumeration: true
+use_sssd_for_enurmeration: true
+krb5_kdc_active_directory_set_encryption_types: false
+krb5_kdc_active_directory_delete_on_regenerate: false
